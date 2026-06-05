@@ -1,5 +1,6 @@
 package com.example.likelion_pbl_spring;
 
+import com.example.likelion_pbl_spring.service.MemberService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;

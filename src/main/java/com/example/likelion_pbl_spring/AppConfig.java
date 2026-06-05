@@ -1,5 +1,8 @@
 package com.example.likelion_pbl_spring;
 
+import com.example.likelion_pbl_spring.repository.MemberRepository;
+import com.example.likelion_pbl_spring.repository.MemoryMemberRepository; // 👈 이동한 저장소 패키지 임포트!
+import com.example.likelion_pbl_spring.service.MemberService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,13 +11,11 @@ public class AppConfig {
 
     @Bean
     public MemberRepository memberRepository() {
-        // 기존에 쓰시던 MemoryMemberRepository를 스프링 빈으로 등록합니다.
         return new MemoryMemberRepository();
     }
 
     @Bean
     public MemberService memberService() {
-        // memberRepository()를 매개변수로 넣어서 의존성을 주입(DI)해줍니다.
         return new MemberService(memberRepository());
     }
 }
