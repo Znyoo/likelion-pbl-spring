@@ -1,104 +1,101 @@
 package com.example.likelion_pbl_spring.controller;
 
+import com.example.likelion_pbl_spring.Member;
+import com.example.likelion_pbl_spring.RoleType;
 import com.example.likelion_pbl_spring.dto.*;
-import com.example.likelion_pbl_spring.role.Lion;
-import com.example.likelion_pbl_spring.role.Member;
-import com.example.likelion_pbl_spring.role.Staff;
 import com.example.likelion_pbl_spring.service.MemberService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/members")
+@RestController // 🌟 [필수] 스프링이 이 클래스를 컨트롤러로 인식하게 합니다!
+@RequestMapping("/members") // 🌟 기본 주소를 /members로 지정합니다.
 public class MemberController {
 
-    private final MemberService memberService;
+    private final MemberService injectedMemberService;
 
+    // 생성자 주입
     public MemberController(MemberService memberService) {
-        this.memberService = memberService;
+        this.injectedMemberService = memberService;
     }
 
-    // ================= [ 0. 전체 멤버 조회 ] =================
-    @GetMapping
-    public ResponseEntity<List<Member>> getAllMembers() {
-        // GET http://127.0.0.1:8080/members 요청 시 200 OK와 함께 전체 리스트 반환
-        return ResponseEntity.ok(memberService.getAllMembers());
-    }
+    // ================= [ 1. 회원 등록 API ] =================
 
-    // ================= [ 1. Lion(아기사자) 등록 ] =================
-    @PostMapping("/lions")
-    public ResponseEntity<?> registerLion(@RequestBody LionCreateRequest request) {
-        Lion lion = memberService.createLion(request);
+    @PostMapping("/lion")
+    public ResponseEntity<?> createLion(@RequestBody LionCreateRequest request) {
+        Member lion = injectedMemberService.createLion(request);
         if (lion == null) {
-            // 이름 중복 등록 시 409 Conflict 반환
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.badRequest().body("이미 존재하는 이름입니다.");
         }
-        // 정상 등록 시 201 Created와 함께 캡처본 포맷(roleName 포함)으로 반환
-        return ResponseEntity.status(HttpStatus.CREATED).body(LionResponse.from(lion));
+        return ResponseEntity.ok(LionResponse.fromEntity(lion));
     }
 
-    // ================= [ 2. Staff(운영진) 등록 ] =================
-    @PostMapping("/staffs")
-    public ResponseEntity<?> registerStaff(@RequestBody StaffCreateRequest request) {
-        Staff staff = memberService.createStaff(request);
+    @PostMapping("/staff")
+    public ResponseEntity<?> createStaff(@RequestBody StaffCreateRequest request) {
+        Member staff = injectedMemberService.createStaff(request);
         if (staff == null) {
-            // 이름 중복 등록 시 409 Conflict 반환
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.badRequest().body("이미 존재하는 이름입니다.");
         }
-        // 정상 등록 시 201 Created와 함께 캡처본 포맷(roleName 포함)으로 반환
-        return ResponseEntity.status(HttpStatus.CREATED).body(StaffResponse.from(staff));
+        return ResponseEntity.ok(StaffResponse.fromEntity(staff));
     }
 
-    // ================= [ 4. 단일 멤버 조회 (이름 기준) ] =================
-    @GetMapping("/{name}")
-    public ResponseEntity<?> findMemberByName(@PathVariable String name) {
-        Member member = memberService.getMemberByName(name);
-        if (member == null) {
-            // 없는 이름 조회 시 404 Not Found 반환
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    // ================= [ 2. 회원 수정 API ] =================
 
-        // 인스턴스 타입에 맞춰 각각 맞는 Response DTO로 감싸서 반환 (roleName 매핑용)
-        if (member instanceof Lion) {
-            return ResponseEntity.ok(LionResponse.from((Lion) member));
-        } else if (member instanceof Staff) {
-            return ResponseEntity.ok(StaffResponse.from((Staff) member));
-        }
-        return ResponseEntity.ok(member);
-    }
-
-    // ================= [ 5. Lion 수정 ] =================
-    @PutMapping("/lions/{name}")
+    @PutMapping("/lion/{name}")
     public ResponseEntity<?> updateLion(@PathVariable String name, @RequestBody LionUpdateRequest request) {
-        Lion updatedLion = memberService.updateLion(name, request);
-        if (updatedLion == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        Member updated = injectedMemberService.updateLion(name, request);
+        if (updated == null) {
+            return ResponseEntity.badRequest().body("해당 이름의 아기사자를 찾을 수 없거나 수정에 실패했습니다.");
         }
-        return ResponseEntity.ok(LionResponse.from(updatedLion));
+        return ResponseEntity.ok(LionResponse.fromEntity(updated));
     }
 
-    // ================= [ 6. Staff 수정 ] =================
-    @PutMapping("/staffs/{name}")
+    @PutMapping("/staff/{name}")
     public ResponseEntity<?> updateStaff(@PathVariable String name, @RequestBody StaffUpdateRequest request) {
-        Staff updatedStaff = memberService.updateStaff(name, request);
-        if (updatedStaff == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        Member updated = injectedMemberService.updateStaff(name, request);
+        if (updated == null) {
+            return ResponseEntity.badRequest().body("해당 이름의 운영진을 찾을 수 없거나 수정에 실패했습니다.");
         }
-        return ResponseEntity.ok(StaffResponse.from(updatedStaff));
+        return ResponseEntity.ok(StaffResponse.fromEntity(updated));
     }
 
-    // ================= [ 7. 멤버 삭제 ] =================
+    // ================= [ 3. 조회 및 삭제 API ] =================
+
+    @GetMapping("/{name}")
+    public ResponseEntity<?> getMemberByName(@PathVariable String name) {
+        Member member = injectedMemberService.getMemberByName(name);
+        if (member == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (member.getRoleType() == RoleType.LION) {
+            return ResponseEntity.ok(LionResponse.fromEntity(member));
+        } else {
+            return ResponseEntity.ok(StaffResponse.fromEntity(member));
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<?>> getAllMembers() {
+        List<Member> members = injectedMemberService.getAllMembers();
+
+        List<?> responses = members.stream()
+                .map(m -> m.getRoleType() == RoleType.LION
+                        ? LionResponse.fromEntity(m)
+                        : StaffResponse.fromEntity(m))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
     @DeleteMapping("/{name}")
     public ResponseEntity<?> deleteMember(@PathVariable String name) {
-        boolean isDeleted = memberService.deleteMember(name);
+        boolean isDeleted = injectedMemberService.deleteMember(name);
         if (!isDeleted) {
-            // 없는 이름 삭제 시 404 Not Found 반환
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.badRequest().body("해당 이름의 회원이 존재하지 않습니다.");
         }
-        // 삭제 성공 시 바디 없이 204 No Content 반환
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        return ResponseEntity.ok("성공적으로 삭제되었습니다.");
     }
 }

@@ -1,7 +1,6 @@
 package com.example.likelion_pbl_spring.dto;
 
-import com.example.likelion_pbl_spring.role.Lion;
-import java.lang.reflect.Field;
+import com.example.likelion_pbl_spring.Member;
 
 public class LionResponse {
     private String name;
@@ -10,6 +9,7 @@ public class LionResponse {
     private String part;
     private String studentId;
 
+    // 생성자
     public LionResponse(String name, String major, int generation, String part, String studentId) {
         this.name = name;
         this.major = major;
@@ -18,31 +18,18 @@ public class LionResponse {
         this.studentId = studentId;
     }
 
-    public static LionResponse from(Lion lion) {
+    // 🌟 [핵심 변경] 리플렉션을 싹 걷어내고 일반 Member 엔티티에서 안전하게 꺼내옵니다!
+    public static LionResponse fromEntity(Member member) {
         return new LionResponse(
-                getFieldValue(lion, "name"),
-                getFieldValue(lion, "major"),
-                Integer.parseInt(getFieldValue(lion, "generation")),
-                getFieldValue(lion, "part"),
-                getFieldValue(lion, "studentId")
+                member.getName(),
+                member.getMajor(),
+                member.getGeneration() != null ? member.getGeneration() : 0, // null 방지 처리
+                member.getPart(),
+                member.getStudentId()
         );
     }
 
-    private static String getFieldValue(Object obj, String fieldName) {
-        Class<?> clazz = obj.getClass();
-        while (clazz != null) {
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return String.valueOf(field.get(obj));
-            } catch (Exception e) {
-                clazz = clazz.getSuperclass();
-            }
-        }
-        return "";
-    }
-
-    // Getters
+    // ================= [ Getters ] =================
     public String getName() { return name; }
     public String getMajor() { return major; }
     public int getGeneration() { return generation; }

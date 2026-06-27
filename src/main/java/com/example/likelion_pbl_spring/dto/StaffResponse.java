@@ -1,51 +1,34 @@
 package com.example.likelion_pbl_spring.dto;
 
-import com.example.likelion_pbl_spring.role.Staff;
-import java.lang.reflect.Field;
+import com.example.likelion_pbl_spring.Member;
 
 public class StaffResponse {
     private String name;
     private String major;
-    private int generation;
     private String part;
     private String position;
 
-    public StaffResponse(String name, String major, int generation, String part, String position) {
+    // 생성자
+    public StaffResponse(String name, String major, String part, String position) {
         this.name = name;
         this.major = major;
-        this.generation = generation;
         this.part = part;
         this.position = position;
     }
 
-    public static StaffResponse from(Staff staff) {
+    // 🌟 운영진 엔티티 데이터를 Response DTO로 안전하게 변환합니다.
+    public static StaffResponse fromEntity(Member member) {
         return new StaffResponse(
-                getFieldValue(staff, "name"),
-                getFieldValue(staff, "major"),
-                Integer.parseInt(getFieldValue(staff, "generation")),
-                getFieldValue(staff, "part"),
-                getFieldValue(staff, "position")
+                member.getName(),
+                member.getMajor(),
+                member.getPart(),
+                member.getPosition()
         );
     }
 
-    private static String getFieldValue(Object obj, String fieldName) {
-        Class<?> clazz = obj.getClass();
-        while (clazz != null) {
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return String.valueOf(field.get(obj));
-            } catch (Exception e) {
-                clazz = clazz.getSuperclass();
-            }
-        }
-        return "";
-    }
-
-    // Getters
+    // ================= [ Getters ] =================
     public String getName() { return name; }
     public String getMajor() { return major; }
-    public int getGeneration() { return generation; }
     public String getPart() { return part; }
     public String getPosition() { return position; }
 }
