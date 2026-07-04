@@ -1,4 +1,4 @@
-package com.example.likelion_pbl_spring;
+package com.example.likelion_pbl_spring.member.domain;
 
 public enum RoleType {
     LION("아기사자"),

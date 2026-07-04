@@ -1,4 +1,4 @@
-package com.example.likelion_pbl_spring.dto;
+package com.example.likelion_pbl_spring.member.dto;
 
 public class LionUpdateRequest {
     private String major;

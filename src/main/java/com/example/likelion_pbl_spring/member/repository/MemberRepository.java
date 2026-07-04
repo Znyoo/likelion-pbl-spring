@@ -1,6 +1,6 @@
-package com.example.likelion_pbl_spring.repository;
+package com.example.likelion_pbl_spring.member.repository;
 
-import com.example.likelion_pbl_spring.Member;
+import com.example.likelion_pbl_spring.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
